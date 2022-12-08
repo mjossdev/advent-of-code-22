@@ -19,3 +19,12 @@ fun <T> List<T>.toPair(): Pair<T, T> {
     check(size == 2)
     return Pair(this[0], this[1])
 }
+
+fun <T> Iterable<T>.countUntil(predicate: (T) -> Boolean): Int {
+    var count = 0
+    for (e in this) {
+        ++count
+        if (predicate(e)) break
+    }
+    return count
+}
