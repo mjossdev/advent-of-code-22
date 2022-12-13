@@ -28,3 +28,9 @@ fun <T> Iterable<T>.countUntil(predicate: (T) -> Boolean): Int {
     }
     return count
 }
+
+fun <T> lexicographicalCompare(left: List<T>, right: List<T>, comparator: (T, T) -> Int): Int =
+    left.zip(right).firstNotNullOfOrNull { (l, r) -> comparator(l, r).takeIf { it != 0 } }
+        ?: (left.size compareTo right.size)
+
+fun List<Int>.product() = reduce(Int::times)
