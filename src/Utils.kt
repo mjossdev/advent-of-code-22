@@ -34,3 +34,18 @@ fun <T> lexicographicalCompare(left: List<T>, right: List<T>, comparator: (T, T)
         ?: (left.size compareTo right.size)
 
 fun List<Int>.product() = reduce(Int::times)
+
+fun <T> Iterable<T>.repeat() = sequence {
+    while (true) {
+        val iterator = iterator()
+        while (iterator.hasNext()) {
+            yield(iterator.next())
+        }
+    }
+}
+
+inline fun repeat(times: Long, block: (Long) -> Unit) {
+    for (i in 0L until times) {
+        block(i)
+    }
+}
