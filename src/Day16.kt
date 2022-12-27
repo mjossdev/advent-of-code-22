@@ -96,7 +96,7 @@ fun main() {
         val start = valves.getValue("AA")
         val usefulValves = valves.values.asSequence().filter { it.flowRate > 0 }.toSet()
         var states = TraverserState(start, remainingMinutes).let {
-            listOf(State(List(numberOfTraversers) { _ -> it }, 0, usefulValves))
+            setOf(State(List(numberOfTraversers) { _ -> it }, 0, usefulValves))
         }
         var maxReleasedPressure = 0
 
@@ -126,7 +126,7 @@ fun main() {
             }.filter {
                 it.releasedPressure + (it.traversers.maxOfOrNull { t -> t.remainingMinutes - 1 }
                     ?: 0) * it.remainingValves.sumOf { v -> v.flowRate } > maxReleasedPressure
-            }.toList()
+            }.toSet()
             maxReleasedPressure = max(maxReleasedPressure, states.maxOfOrNull { it.releasedPressure } ?: 0)
         }
         return maxReleasedPressure
