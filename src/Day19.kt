@@ -1,8 +1,10 @@
 import java.util.*
+import java.util.stream.Collectors
+import java.util.stream.Stream
 import kotlin.math.max
 
 private enum class Material {
-    ORE, CLAY, OBSIDIAN;
+    OBSIDIAN, CLAY, ORE;
 }
 
 fun main() {
@@ -25,9 +27,9 @@ fun main() {
         EnumMap(this).apply { this[material] = this.getValue(material) + 1 }
 
     fun createMap(ore: Int = 0, clay: Int = 0, obsidian: Int = 0) = EnumMap<Material, Int>(Material::class.java).apply {
-        this[Material.ORE] = ore
-        this[Material.CLAY] = clay
         this[Material.OBSIDIAN] = obsidian
+        this[Material.CLAY] = clay
+        this[Material.ORE] = ore
     }
 
     val blueprintRegex =
@@ -50,54 +52,51 @@ fun main() {
             }
     }
 
-    fun calculateQualityLevel(blueprint: Blueprint, minutes: Int): Int {
+    fun calculateGeodes(blueprint: Blueprint, minutes: Int): Int {
         data class State(val stock: Map<Material, Int>, val production: Map<Material, Int>, val geodes: Int)
 
         var maxGeodes = 0
         var states = setOf(State(createMap(), createMap(ore = 1), 0))
         repeat(minutes) { m ->
             val remainingMinutes = minutes - m
-            states = states.asSequence().flatMap { (stock, production, geodes) ->
+            states = states.parallelStream().flatMap { (stock, production, geodes) ->
                 val newStock = stock.plus(production)
-                sequence {
+                Stream.builder<State>().also {
                     if (stock.meets(blueprint.geodeCosts)) {
-                        yield(State(newStock.subtract(blueprint.geodeCosts), production, geodes + remainingMinutes - 1))
-                        return@sequence
-                    }
-                    for ((material, costs) in blueprint.costs) {
-                        val maxUsage = remainingMinutes * max(
-                            blueprint.costs.values.maxOf { it.getValue(material) },
-                            blueprint.geodeCosts.getValue(material)
-                        )
-                        if (newStock.getValue(material) < maxUsage && stock.meets(costs)) {
-                            yield(State(newStock.subtract(costs), production.increment(material), geodes))
+                        it.add(State(newStock.subtract(blueprint.geodeCosts), production, geodes + remainingMinutes - 1))
+                    } else {
+                        for ((material, costs) in blueprint.costs) {
+                            val maxUsage = remainingMinutes * max(
+                                blueprint.costs.values.maxOf { it.getValue(material) },
+                                blueprint.geodeCosts.getValue(material)
+                            )
+                            if (newStock.getValue(material) < maxUsage && stock.meets(costs)) {
+                                it.add(State(newStock.subtract(costs), production.increment(material), geodes))
+                            }
                         }
+                        it.add(State(newStock, production, geodes))
                     }
-                    yield(State(newStock, production, geodes))
-                }
+                }.build()
             }.filter { it.geodes + (0 ..remainingMinutes - 2).sum() > maxGeodes }
-                .toSet()
+                .collect(Collectors.toSet())
             states.maxOfOrNull { it.geodes }?.let {
                 maxGeodes = max(it, maxGeodes)
             }
         }
         println("blueprint ${blueprint.id} done")
-        return maxGeodes * blueprint.id
+        return maxGeodes
     }
 
-    fun part1(input: List<String>): Int {
-        val blueprints = readBlueprints(input)
-        return blueprints.parallelStream().mapToInt { calculateQualityLevel(it, 24) }.sum()
-    }
+    fun part1(input: List<String>): Int = readBlueprints(input).sumOf { calculateGeodes(it, 24) * it.id }
 
-//    fun part2(input: List<String>): Int
+    fun part2(input: List<String>): Int = readBlueprints(input.take(3)).parallelStream().mapToInt { calculateGeodes(it, 32) }.reduce(Int::times).asInt
 
     // test if implementation meets criteria from the description, like:
     val testInput = readInput("Day19_test")
     check(part1(testInput) == 33)
-//    check(part2(testInput) == 58)
+    check(part2(testInput) == 56 * 62)
 
     val input = readInput("Day19")
     println(part1(input))
-//    println(part2(input))
+    println(part2(input))
 }

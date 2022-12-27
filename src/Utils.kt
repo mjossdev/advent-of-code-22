@@ -1,5 +1,6 @@
 import java.math.BigInteger
 import java.security.MessageDigest
+import java.util.EnumMap
 import kotlin.io.path.Path
 import kotlin.io.path.readLines
 
@@ -35,17 +36,24 @@ fun <T> lexicographicalCompare(left: List<T>, right: List<T>, comparator: (T, T)
 
 fun List<Int>.product() = reduce(Int::times)
 
-fun <T> Iterable<T>.repeat() = sequence {
-    while (true) {
-        val iterator = iterator()
-        while (iterator.hasNext()) {
-            yield(iterator.next())
-        }
-    }
-}
-
 inline fun repeat(times: Long, block: (Long) -> Unit) {
     for (i in 0L until times) {
         block(i)
+    }
+}
+
+private val numberRegex = Regex("""\d+""")
+
+fun String.isNumber() = numberRegex.matches(this)
+
+operator fun <T> List<T>.component6() = this[5]
+operator fun <T> List<T>.component7() = this[6]
+
+/**
+ * Optimized version for EnumMap
+ */
+inline fun <reified K: Enum<K>, V, R> Map<K, V>.mapValues(transform: (Map.Entry<K, V>) -> R): Map<K, R> = EnumMap<K, R>(K::class.java).also {
+    for (entry in this) {
+        it[entry.key] = transform(entry)
     }
 }
