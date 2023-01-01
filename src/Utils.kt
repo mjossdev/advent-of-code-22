@@ -36,12 +36,6 @@ fun <T> lexicographicalCompare(left: List<T>, right: List<T>, comparator: (T, T)
 
 fun List<Int>.product() = reduce(Int::times)
 
-inline fun repeat(times: Long, block: (Long) -> Unit) {
-    for (i in 0L until times) {
-        block(i)
-    }
-}
-
 private val numberRegex = Regex("""\d+""")
 
 fun String.isNumber() = numberRegex.matches(this)
