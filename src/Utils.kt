@@ -51,3 +51,7 @@ inline fun <reified K: Enum<K>, V, R> Map<K, V>.mapValues(transform: (Map.Entry<
         it[entry.key] = transform(entry)
     }
 }
+
+enum class Direction {
+    UP, DOWN, LEFT, RIGHT
+}
